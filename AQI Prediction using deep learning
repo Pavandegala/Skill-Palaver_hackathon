@@ -1,0 +1,122 @@
+# AQI Prediction using Kaggle Dataset (city_day.csv)
+
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+
+from sklearn.metrics import mean_squared_error, accuracy_score
+
+
+# -----------------------------
+# Load Dataset
+# -----------------------------
+
+data = pd.read_csv("city_day.csv")
+
+print("Dataset Loaded Successfully")
+
+print(data.head())
+
+
+# -----------------------------
+# Select Required Columns
+# -----------------------------
+
+# PM2.5 → RSPM
+# PM10 → SPM
+
+data = data[['SO2', 'NO2', 'PM2.5', 'PM10', 'AQI', 'AQI_Bucket']]
+
+
+# Rename columns (optional)
+
+data.rename(columns={
+
+    'PM2.5': 'RSPM',
+    'PM10': 'SPM'
+
+}, inplace=True)
+
+
+# -----------------------------
+# Remove Missing Values
+# -----------------------------
+
+data = data.dropna()
+
+print("\nAfter Cleaning:", data.shape)
+
+
+# -----------------------------
+# REGRESSION
+# -----------------------------
+
+print("\n---- AQI VALUE PREDICTION ----")
+
+X = data[['SO2', 'NO2', 'RSPM', 'SPM']]
+
+y = data['AQI']
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+
+    X, y, test_size=0.2, random_state=42
+
+)
+
+
+rf_reg = RandomForestRegressor(n_estimators=100)
+
+rf_reg.fit(X_train, y_train)
+
+
+pred = rf_reg.predict(X_test)
+
+
+print("Mean Squared Error:", mean_squared_error(y_test, pred))
+
+
+# -----------------------------
+# CLASSIFICATION
+# -----------------------------
+
+print("\n---- AQI CATEGORY PREDICTION ----")
+
+y_class = data['AQI_Bucket']
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+
+    X, y_class, test_size=0.2, random_state=42
+
+)
+
+
+rf_clf = RandomForestClassifier(n_estimators=100)
+
+rf_clf.fit(X_train, y_train)
+
+
+pred2 = rf_clf.predict(X_test)
+
+
+print("Accuracy:", accuracy_score(y_test, pred2))
+
+
+# -----------------------------
+# SAMPLE TEST
+# -----------------------------
+
+print("\n---- SAMPLE TEST ----")
+
+sample = [[50, 40, 120, 180]]
+
+aqi_value = rf_reg.predict(sample)
+
+aqi_category = rf_clf.predict(sample)
+
+
+print("Predicted AQI:", aqi_value[0])
+
+print("Predicted Category:", aqi_category[0])
